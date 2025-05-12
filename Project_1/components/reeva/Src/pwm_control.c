@@ -7,13 +7,13 @@
 #include "freertos/task.h"
 #include "uart_handler.h"
 
-#define LEDC_TIMER              LEDC_TIMER_0
-#define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_FREQ_HZ            1000
-#define LEDC_RESOLUTION         LEDC_TIMER_10_BIT
-#define DIMMING_CHANNEL         LEDC_CHANNEL_0
-#define TUNING_CHANNEL          LEDC_CHANNEL_1
-#define DIMMING_GPIO            4
+#define LEDC_TIMER              LEDC_TIMER_0 // Set LEDC Timer_0
+#define LEDC_MODE               LEDC_LOW_SPEED_MODE // Set LEDC Low Speed Mode
+#define LEDC_FREQ_HZ            1000 // Frequncy 1000 
+#define LEDC_RESOLUTION         LEDC_TIMER_10_BIT // Set 10 bit Resolution
+#define DIMMING_CHANNEL         LEDC_CHANNEL_0 // Channel_0 for dimming
+#define TUNING_CHANNEL          LEDC_CHANNEL_1 // channel_1 for tuning
+#define DIMMING_GPIO            4 
 #define TUNING_GPIO             5
 #define TASK_STACK_SIZE         2048
 #define LIGHT_QUEUE_LENGTH      10
@@ -24,6 +24,7 @@ static const char *TAG = "pwm_control";
 
 static void pwm_control_task(void *arg);
 
+// Set PWM & LEDC Timer Parameter and Configure
 esp_err_t pwm_control_init(void)
 {
     light_control_queue_init();
@@ -79,6 +80,7 @@ esp_err_t pwm_control_init(void)
     return ESP_OK;
 }
 
+// PWM Control Task Creation
 void pwm_control_start(void)
 {
     xTaskCreate(pwm_control_task, "pwm_ctrl_task", TASK_STACK_SIZE, NULL, 1, NULL);
@@ -92,13 +94,15 @@ static void pwm_control_task(void *arg)
     {
         if(light_queue != NULL)
 
-        if (xQueueReceive(light_queue, &received, portMAX_DELAY) == pdTRUE) 
+        if (xQueueReceive(light_queue, &received, portMAX_DELAY) == pdTRUE) // Check data is received 
         {
+            // Convert in percentage to duty cycle
             uint16_t dim_duty = (received.dimming * 1023) / 100;
             uint16_t tun_duty = (received.tuning * 1023) / 100;
 
             ESP_LOGI(TAG, "Update dimming=%d, tuning=%d", received.dimming, received.tuning);
-
+            
+            // Set and Update new duty cycle value in GPIO
             if (ledc_set_duty(LEDC_MODE, DIMMING_CHANNEL, dim_duty) != ESP_OK)
                 ESP_LOGE(TAG, "Failed to ledc set duty dimming");
 
@@ -111,7 +115,7 @@ static void pwm_control_task(void *arg)
             if (ledc_update_duty(LEDC_MODE, TUNING_CHANNEL) != ESP_OK)
                 ESP_LOGE(TAG, "Failed to ledc set duty tuning");
 
-            if (nvs_storage_write(&received) != ESP_OK) 
+            if (nvs_storage_write(&received) != ESP_OK) // Save New value in NVS
                 ESP_LOGE(TAG, "Failed to save values to NVS");
 
             uart_send_ack(received.dimming, received.tuning);
@@ -119,7 +123,7 @@ static void pwm_control_task(void *arg)
     }
 }
 
-esp_err_t light_control_queue_init(void)
+esp_err_t light_control_queue_init(void) // Task Creation
 {
     light_queue = xQueueCreate(LIGHT_QUEUE_LENGTH, sizeof(light_data_t));
     if (light_queue == NULL) 
@@ -132,7 +136,7 @@ esp_err_t light_control_queue_init(void)
     return ESP_OK;
 }
 
-esp_err_t send_to_light_queue(const light_data_t *data)
+esp_err_t send_to_light_queue(const light_data_t *data) //Send light data in Queue
 {
     if (data == NULL) 
     {

@@ -6,6 +6,7 @@
 static const char *TAG = "nvs_storage";
 #define NVS_NAMESPACE "lightcfg"
 
+// Intialise NVS 
 esp_err_t nvs_storage_init(void)
 {
     esp_err_t err = nvs_flash_init();
@@ -24,6 +25,7 @@ esp_err_t nvs_storage_init(void)
     return err;
 }
 
+// Write a new value in NVS
 esp_err_t nvs_storage_write(const light_data_t *data)
 {
     nvs_handle_t handle;
@@ -49,6 +51,7 @@ esp_err_t nvs_storage_write(const light_data_t *data)
     return err;
 }
 
+// Read data from NVS 
 esp_err_t nvs_storage_read(light_data_t *data)
 {
     nvs_handle_t handle;

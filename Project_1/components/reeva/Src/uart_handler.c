@@ -9,18 +9,18 @@
 #include "freertos/queue.h"
 #include "cJSON.h"
 
-#define UART_NUM UART_NUM_1
+#define UART_NUM UART_NUM_1 // SET UART_1
 #define BUF_SIZE 256
 #define TASK_STACK_SIZE 4096
-#define UART_RX_PIN 4
-#define UART_TX_PIN 5
+#define UART_RX_PIN 4 //UART Rx GPIO PIN
+#define UART_TX_PIN 5 //UART Tx GPIO PIN
 
 static const char *TAG = "uart_handler";
 static QueueHandle_t uart_queue;
-// Task 
 static void uart_event_task(void *arg);
 
-esp_err_t uart_init(void)
+// UART Init Cofigure
+esp_err_t uart_init(void) 
 {
     uart_config_t uart_config = {
         .baud_rate = 115200,
@@ -52,6 +52,7 @@ esp_err_t uart_init(void)
     return ESP_OK;
 }
 
+// Send UART Acknowladge 
 void uart_send_ack(uint16_t dimming, uint16_t tuning)
 {
     cJSON *ack_json = cJSON_CreateObject();
@@ -69,14 +70,12 @@ void uart_send_ack(uint16_t dimming, uint16_t tuning)
     }
 
     uart_write_bytes(UART_NUM, ack_str, strlen(ack_str));
-    // uart_write_bytes(UART_NUM, "\n", 1);
-    // printf("\n");
-
+    
     cJSON_Delete(ack_json);
     cJSON_free(ack_str);
 }
 
-void uart_start(void)
+void uart_start(void) // UART Task Creation
 {
     xTaskCreate(uart_event_task, "uart_event_task", TASK_STACK_SIZE, NULL, 12, NULL);
 }
@@ -134,7 +133,7 @@ static void uart_event_task(void *arg)
                             }
                         }
 
-                        if (flag) 
+                        if (flag) // Send Data into Light Queue
                         {
                             if (send_to_light_queue(&light_data) == ESP_OK)
                             {
