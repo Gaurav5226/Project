@@ -17,7 +17,7 @@
 
 static const char *TAG = "uart_handler";
 static QueueHandle_t uart_queue;
-
+// Task 
 static void uart_event_task(void *arg);
 
 esp_err_t uart_init(void)
